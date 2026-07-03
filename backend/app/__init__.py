@@ -31,14 +31,22 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = int(os.getenv('JWT_REFRESH_TOKEN_EXPIR
 app.config['RATELIMIT_STORAGE_URL'] = os.getenv('RATELIMIT_STORAGE_URL', os.getenv('REDIS_URL', 'memory://'))
 
 
+from flask_migrate import Migrate
+
 db = SQLAlchemy(app)
 limiter = Limiter(key_func=get_remote_address, app=app, default_limits=['200 per day', '50 per hour'])
+migrate = Migrate(app, db)
 
+# Import routes
 from app.auth.routes import auth_bp
-from app.auth.models import User
 from app.dashboard.routes import dashboard_bp
 from app.resume_pipeline.routes import resume_bp
 from app.mentor.routes import mentor_bp
+
+# Import all models for SQLAlchemy/Alembic discovery
+from app.auth.models import User
+from app.resume_pipeline.models import ResumeProfile, CareerScoreSnapshot, TimelineEvent
+from app.mentor.models import MentorSession, MentorMessage, MentorMemory, Mission, UserFeedback
 
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
@@ -55,8 +63,8 @@ def _startup_report():
 
     # Database check
     try:
-        # simple lightweight check
-        db.session.execute('SELECT 1')
+        with app.app_context():
+            db.session.execute(db.text('SELECT 1'))
         checks['Database'] = (True, _db_backend)
     except Exception as exc:
         checks['Database'] = (False, str(exc))
@@ -91,7 +99,7 @@ def _startup_report():
 
     # Resume Upload API (blueprint registration)
     try:
-        checks['Resume Upload API'] = ('resumes' in app.blueprints, 'blueprints: ' + ','.join(list(app.blueprints.keys())))
+        checks['Resume Upload API'] = ('resume_pipeline' in app.blueprints, 'blueprints: ' + ','.join(list(app.blueprints.keys())))
     except Exception as exc:
         checks['Resume Upload API'] = (False, str(exc))
 

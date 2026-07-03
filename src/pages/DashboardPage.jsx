@@ -16,8 +16,11 @@ import AIInsights from '../components/dashboard/AIInsights'
 import QuickActions from '../components/dashboard/QuickActions'
 import AITimeline from '../components/dashboard/AITimeline'
 import { getDashboard } from '../services/dashboardService'
+import { useAuth } from '../contexts/AuthContext'
+import UploadResume from '../components/UploadResume'
 
 export function DashboardPage() {
+  const { user } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -98,6 +101,25 @@ export function DashboardPage() {
     )
   }
 
+  if (data?.empty_state) {
+    return (
+      <section className="mx-auto max-w-4xl px-6 py-20 sm:px-8 lg:px-10">
+        <div className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/60 p-10 text-center backdrop-blur-2xl shadow-[0_0_80px_rgba(34,211,238,0.1)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+            <span className="text-2xl">🎓</span>
+          </div>
+          <h2 className="mt-8 text-3xl font-semibold tracking-[-0.04em] text-white">Welcome, {user?.full_name || 'Builder'}!</h2>
+          <p className="mt-4 text-base leading-7 text-slate-400 max-w-md mx-auto">
+            To initialize your AI Career Operating System, upload your resume. We'll decode your experience, map your skills, and compute your Career DNA instantly.
+          </p>
+          <div className="mt-10 flex justify-center">
+            <UploadResume userId={user?.id} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="mx-auto min-h-[80vh] max-w-7xl px-6 py-12 sm:px-8 lg:px-10">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -134,6 +156,10 @@ export function DashboardPage() {
           <AITimeline events={data.timeline} />
         </aside>
       </div>
+
+      <footer className="mt-16 border-t border-white/5 pt-8 text-center text-xs text-slate-500">
+        <p>⚠️ Disclaimer: All AI recommendations, metrics, matches, and coaching content are suggestions for guidance and professional development. Verify all application materials before submission.</p>
+      </footer>
     </section>
   )
 }

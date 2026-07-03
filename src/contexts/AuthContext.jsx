@@ -1,13 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../services/api'
 
 const AuthContext = createContext(null)
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
-  headers: { 'Content-Type': 'application/json' },
-})
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -18,7 +13,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const storedToken = localStorage.getItem('access_token')
     if (storedToken) {
-      api.defaults.headers.common.Authorization = `Bearer ${storedToken}`
       api.get('/auth/me')
         .then((response) => setUser(response.data.user))
         .catch(() => {
@@ -38,7 +32,6 @@ export function AuthProvider({ children }) {
     const { access_token, refresh_token, user: authUser } = response.data
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('refresh_token', refresh_token)
-    api.defaults.headers.common.Authorization = `Bearer ${access_token}`
     setToken(access_token)
     setUser(authUser)
     navigate('/dashboard')
@@ -56,7 +49,6 @@ export function AuthProvider({ children }) {
     } finally {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
-      delete api.defaults.headers.common.Authorization
       setToken(null)
       setUser(null)
       navigate('/auth')

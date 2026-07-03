@@ -155,17 +155,45 @@ class TalentParseService:
         return {'status': 'ok', 'profile': profile, 'intel': intel, 'stages': stages}
 
 
-# In-memory store for latest profiles (demo only)
+# In-memory store for latest profiles (demo only fallback)
 _latest_profiles = {}
 
 
 def _store_latest_profile(key, payload):
     if not key:
         key = 'anon'
+    try:
+        from app.resume_pipeline.resume_repository import ResumeRepository
+        profile = payload.get('profile')
+        intel = payload.get('intel')
+        meta = payload.get('meta')
+        stages = payload.get('stages')
+        filename = (profile.get('metadata', {}).get('file_name') if profile else None) or 'resume.pdf'
+        
+        ResumeRepository.save_profile(
+            user_id=key,
+            filename=filename,
+            text=profile.get('raw_text', '') if profile else '',
+            parsed_profile=profile,
+            intel=intel,
+            meta=meta,
+            stages=stages
+        )
+    except Exception as exc:
+        logger.error("DB failed to store profile for %s, falling back to in-memory: %s", key, exc)
+        
     _latest_profiles[key] = payload
 
 
 def get_latest_profile(key=None):
     if not key:
         key = 'anon'
+    try:
+        from app.resume_pipeline.resume_repository import ResumeRepository
+        db_profile = ResumeRepository.get_latest_profile(key)
+        if db_profile:
+            return db_profile
+    except Exception as exc:
+        logger.error("DB failed to read profile for %s, trying in-memory: %s", key, exc)
+        
     return _latest_profiles.get(key)

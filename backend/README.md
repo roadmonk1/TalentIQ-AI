@@ -96,7 +96,7 @@ Quick start (development):
 
 ```bash
 # from backend/ directory
-export FLASK_APP=app.py
+export FLASK_APP=app
 export FLASK_ENV=development
 flask run --host=0.0.0.0 --port=5000
 ```
@@ -104,7 +104,7 @@ flask run --host=0.0.0.0 --port=5000
 On Windows PowerShell:
 
 ```powershell
-$env:FLASK_APP = 'app.py'
+$env:FLASK_APP = 'app'
 $env:FLASK_ENV = 'development'
 flask run --host=0.0.0.0 --port=5000
 ```

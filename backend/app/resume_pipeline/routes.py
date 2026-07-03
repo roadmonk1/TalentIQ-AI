@@ -1,7 +1,8 @@
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from app.resume_pipeline.service import TalentParseService
 from app import limiter
+from app.auth.decorators import login_required
 
 logger = logging.getLogger('app.resume_pipeline.routes')
 
@@ -10,10 +11,11 @@ resume_bp = Blueprint('resume_pipeline', __name__)
 
 @resume_bp.route('/upload', methods=['POST'])
 @limiter.limit('10 per minute')
+@login_required
 def upload_resume():
-    # multipart form: file, user_id, target_career
+    # multipart form: file, target_career
     f = request.files.get('file')
-    user_id = request.form.get('user_id')
+    user_id = str(g.current_user.id)
     target = request.form.get('target_career', 'default')
     if not f:
         return jsonify({'error': 'no_file'}), 400

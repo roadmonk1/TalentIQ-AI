@@ -1,9 +1,20 @@
 import logging
+import uuid
 from datetime import datetime
 from app.career_intel.service import CareerIntelService
 from app.resume_pipeline.service import get_latest_profile
 
 logger = logging.getLogger('app.dashboard')
+
+
+def is_uuid(val):
+    if not val:
+        return False
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
 
 
 class DashboardService:
@@ -38,6 +49,32 @@ class DashboardService:
                 'timeline': profile.get('timeline', [{'id': 't1', 'text': 'Career intelligence computed', 'when': now}]),
                 'careerDNA': intel.get('careerDNA'),
                 'benchmarks': intel.get('benchmarks'),
+            }
+        elif user_id and is_uuid(user_id):
+            # Registered user with no uploaded resume: Empty state!
+            payload = {
+                'empty_state': True,
+                'user': {'full_name': 'New User', 'profile_completion': 0.0},
+                'scores': {
+                    'careerScore': 0,
+                    'resumeScore': 0,
+                    'breakdowns': {
+                        'career': [],
+                        'resume': [],
+                    },
+                },
+                'missions': {'today': 'Upload your resume to get started!', 'weeklyGoals': []},
+                'ai': {
+                    'insights': [],
+                    'recommendations': [],
+                },
+                'jobs': [],
+                'skillGaps': [],
+                'activity': [],
+                'interviews': [],
+                'timeline': [],
+                'careerDNA': {},
+                'benchmarks': {},
             }
         else:
             # Fallback to demo context

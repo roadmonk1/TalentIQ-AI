@@ -54,7 +54,13 @@ class AuthService:
             logger.warning('Refresh token rejected due to invalid type', extra={'token_type': payload.get('type')})
             raise ValueError('Invalid token type')
 
-        user = User.query.get(payload['sub'])
+        import uuid
+        try:
+            user_id = uuid.UUID(payload['sub']) if isinstance(payload['sub'], str) else payload['sub']
+        except ValueError:
+            user_id = payload['sub']
+
+        user = User.query.get(user_id)
         if not user:
             logger.warning('Refresh token rejected for missing user', extra={'user_id': payload.get('sub')})
             raise ValueError('User not found')
@@ -68,7 +74,13 @@ class AuthService:
     @staticmethod
     def get_user_from_token(token):
         payload = decode_token(token)
-        user = User.query.get(payload['sub'])
+        import uuid
+        try:
+            user_id = uuid.UUID(payload['sub']) if isinstance(payload['sub'], str) else payload['sub']
+        except ValueError:
+            user_id = payload['sub']
+
+        user = User.query.get(user_id)
         if not user:
             logger.warning('Token lookup failed for missing user', extra={'user_id': payload.get('sub')})
             raise ValueError('User not found')

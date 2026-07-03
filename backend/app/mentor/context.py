@@ -43,6 +43,15 @@ class MentorContextBuilder:
         profile = stored.get('profile', {})
         intel = stored.get('intel', {})
 
+        from app.mentor.mission_repository import MissionRepository
+        try:
+            db_missions = MissionRepository.get_user_missions(user_id or 'anon')
+        except Exception:
+            db_missions = []
+
+        weekly_goals = db_missions if db_missions else profile.get('weekly_goals', [])
+        timeline = profile.get('timeline', [])
+
         context = MentorContext(
             session_id=session_id or 'anon_session',
             user_id=user_id or 'anon',
@@ -53,8 +62,8 @@ class MentorContextBuilder:
             mission_memory={'accepted': [], 'pending': []},
             learning_memory={'style': 'adaptive', 'available_time': '3-5 hours/week'},
             interview_memory={'history': []},
-            weekly_goals=profile.get('weekly_goals', []),
-            mission_history=profile.get('timeline', []),
+            weekly_goals=weekly_goals,
+            mission_history=timeline,
             progress={'profile_completion': profile.get('profile_completion', 0.0)},
             preferred_learning_style='adaptive',
             available_study_time='3-5 hours/week',
@@ -67,7 +76,7 @@ class MentorContextBuilder:
             skill_gaps=intel.get('skillGaps', []),
             recommendations=intel.get('recommendations', []),
             job_matches=intel.get('jobMatches', []),
-            timeline=profile.get('timeline', []),
+            timeline=timeline,
             weekly_plan=[],
             conversation_summary='',
         )

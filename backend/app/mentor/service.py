@@ -47,19 +47,53 @@ class MentorService:
         validated = ResponseValidator.validate(response)
 
         # Append messages only after successful validation
-        memory.append_message(session_id=context.session_id, role='user', text=message, metadata={'mode': mode, 'intent': intent.name})
-        memory.append_message(session_id=context.session_id, role='assistant', text=validated['assistant_text'], metadata={'mode': mode, 'validated': True})
+        memory.append_message(session_id=context.session_id, role='user', text=message, metadata={'mode': mode, 'intent': intent.name, 'user_id': context.user_id})
+        memory.append_message(session_id=context.session_id, role='assistant', text=validated['assistant_text'], metadata={'mode': mode, 'validated': True, 'user_id': context.user_id})
         memory.append_session_summary(context.session_id, validated)
         return validated
 
     @staticmethod
     def handle_mission(payload):
         session_id = payload.get('session_id')
-        user_id = payload.get('user_id')
+        user_id = payload.get('user_id') or 'anon'
         action = payload.get('action', 'generate')
         context = MentorContextBuilder.build(user_id=user_id, session_id=session_id, mode='Learning')
-        result = IntentRouter.route_mission(action=action, context=context)
-        return result
+
+        from app.mentor.mission_repository import MissionRepository
+
+        try:
+            if action == 'generate':
+                db_missions = MissionRepository.get_user_missions(user_id)
+                if not db_missions:
+                    goals = context.weekly_goals or []
+                    if not goals:
+                        goals = [
+                            {'title': 'Update resume contact and summary sections', 'description': 'Improve clarity and layout of contact and summary info.'},
+                            {'title': 'Close top skill gaps identified by TalentCore', 'description': 'Study the missing key technologies for your target role.'},
+                            {'title': 'Practice behavioral mock interview with AI Mentor', 'description': 'Answer common situational and technical questions.'}
+                        ]
+                    for goal in goals:
+                        title = goal.get('title')
+                        desc = goal.get('description') or goal.get('text') or ''
+                        MissionRepository.create_mission(
+                            user_id=user_id,
+                            session_id=session_id,
+                            title=title,
+                            description=desc,
+                            status='pending'
+                        )
+                    db_missions = MissionRepository.get_user_missions(user_id)
+                return {'status': 'ok', 'missions': db_missions}
+
+            elif action == 'accept':
+                MissionRepository.accept_all_pending(user_id)
+                return {'status': 'ok', 'message': 'Mission accepted'}
+
+            return {'status': 'ok', 'message': 'Action completed'}
+
+        except Exception as exc:
+            logger.error("Database operation failed in handle_mission, falling back: %s", exc)
+            return IntentRouter.route_mission(action=action, context=context)
 
     @staticmethod
     def get_session(session_id):
@@ -78,5 +112,5 @@ class MentorService:
         user_id = payload.get('user_id')
         message = payload.get('message')
         rating = payload.get('rating')
-        MemoryStore.append_feedback(session_id, user_id, message, rating)
+        memory.append_feedback(session_id, user_id, message, rating)
         return {'status': 'ok'}

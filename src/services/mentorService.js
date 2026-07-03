@@ -1,12 +1,7 @@
-import axios from 'axios'
-
-const defaultClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  headers: { 'Content-Type': 'application/json' },
-})
+import sharedApi from './api'
 
 function clientFor(api) {
-  return api || defaultClient
+  return api || sharedApi
 }
 
 export async function getMentorSession(api, sessionId) {
