@@ -107,4 +107,9 @@ def _startup_report():
 
 _startup_report()
 
-__all__ = ['app', 'db']
+
+def create_app():
+    return app
+
+
+__all__ = ['app', 'db', 'create_app']

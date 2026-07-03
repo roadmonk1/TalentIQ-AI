@@ -29,3 +29,17 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local database
+*.sqlite
+*.db
+
+# Environment files
+.env
+
+# Virtual environment
+.venv/

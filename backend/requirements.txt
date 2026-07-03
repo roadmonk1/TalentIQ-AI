@@ -8,5 +8,5 @@ PyJWT==2.8.0
 pdfplumber==0.9.0
 python-docx==0.8.11
 python-dateutil==2.8.2
-psycopg2-binary==2.9.7
+# psycopg2-binary
 requests==2.31.0
