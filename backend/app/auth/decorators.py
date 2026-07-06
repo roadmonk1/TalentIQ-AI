@@ -10,6 +10,9 @@ logger = logging.getLogger('app.auth.decorators')
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            return '', 204
+            
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             logger.warning("Authentication failed: Bearer prefix missing in header")

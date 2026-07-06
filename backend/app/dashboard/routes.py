@@ -9,7 +9,7 @@ logger = logging.getLogger('app.dashboard')
 dashboard_bp = Blueprint('dashboard', __name__)
 
 
-@dashboard_bp.route('/', methods=['GET'])
+@dashboard_bp.route('/', methods=['GET', 'OPTIONS'], strict_slashes=False)
 @login_required
 def get_dashboard():
     user_id = str(g.current_user.id)
