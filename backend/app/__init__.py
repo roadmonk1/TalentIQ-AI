@@ -12,7 +12,14 @@ configure_logging()
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(
+    app,
+    resources={r"/api/*": {"origins": [
+        "https://talent-iq-ai-nu.vercel.app",
+        "http://localhost:5173"
+    ]}},
+    supports_credentials=True
+)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'change-me')
 
 # Database selection: prefer DATABASE_URL (PostgreSQL), otherwise fall back to a local SQLite file for development
