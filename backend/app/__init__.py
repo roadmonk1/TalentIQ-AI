@@ -9,7 +9,10 @@ from app.common.logging import configure_logging
 load_dotenv()
 configure_logging()
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'change-me')
 
 # Database selection: prefer DATABASE_URL (PostgreSQL), otherwise fall back to a local SQLite file for development
