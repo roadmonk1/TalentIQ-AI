@@ -25,6 +25,14 @@ class DashboardService:
         now = datetime.utcnow().isoformat() + 'Z'
         if stored:
             profile = stored['profile']
+            # Fetch user full name from user record if available
+            from app.auth.models import User
+            try:
+                user_record = User.query.filter_by(id=uuid.UUID(user_id)).first() if is_uuid(user_id) else None
+                if user_record:
+                    profile['full_name'] = user_record.full_name
+            except Exception:
+                pass
             intel = stored['intel']
             candidate_jobs = []
             payload = {
